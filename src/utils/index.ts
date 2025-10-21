@@ -4,3 +4,7 @@ export * from "./seriesDefaults";
 export { buildOption } from "./buildOption";
 export { indexedDBManager, IndexedDBManager } from "./indexedDBManager";
 export { CSVExporter } from "./csvExporter";
+export { PerformanceConfigManager } from "./performanceConfigManager";
+export type { PerformanceConfig, ChartMode } from "./performanceConfigManager";
+export { BatchUpdateManager, globalBatchUpdateManager } from "./batchUpdateManager";
+export type { BatchUpdateConfig, ChartUpdate } from "./batchUpdateManager";
