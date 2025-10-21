@@ -218,7 +218,7 @@ const ExportDataModal: React.FC<ExportDataModalProps> = ({ visible, onCancel, mo
                      pageSize: 10,
                      showSizeChanger: true,
                      showQuickJumper: true,
-                      showTotal: (total: number) => `共 ${total} 个会话`,
+                     showTotal: (total: number) => `共 ${total} 个会话`,
                   }}
                   size='small'
                />

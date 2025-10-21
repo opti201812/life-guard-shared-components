@@ -120,12 +120,13 @@ import type { RadarData, BraceletData, OximeterData } from "./shared";
 ### 类型声明文件
 
 项目包含了完整的外部依赖类型声明：
-- `antd` - Ant Design 组件库
-- `@ant-design/icons` - Ant Design 图标库  
-- `echarts-for-react` - ECharts React 组件
-- `echarts` - ECharts 图表库
-- `dayjs` - 日期处理库
-- `NodeJS` - Node.js 类型支持
+
+-  `antd` - Ant Design 组件库
+-  `@ant-design/icons` - Ant Design 图标库
+-  `echarts-for-react` - ECharts React 组件
+-  `echarts` - ECharts 图表库
+-  `dayjs` - 日期处理库
+-  `NodeJS` - Node.js 类型支持
 
 ## 🚀 下一步
 
