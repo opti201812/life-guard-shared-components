@@ -2,6 +2,7 @@
 // 这些类型声明用于在没有安装peer dependencies时提供基本的类型支持
 
 declare module "antd" {
+   // 导出所有常用的 antd 组件
    export const Button: any;
    export const Card: any;
    export const Space: any;
@@ -16,6 +17,40 @@ declare module "antd" {
    export const Spin: any;
    export const Tag: any;
    export const Popconfirm: any;
+   export const ConfigProvider: any;
+   export const Select: any;
+   export const Form: any;
+   export const InputNumber: any;
+   export const Divider: any;
+   export const Statistic: any;
+   export const Alert: any;
+   export const Input: any;
+   export const Checkbox: any;
+   export const Radio: any;
+   export const Switch: any;
+   export const Slider: any;
+   export const Upload: any;
+   export const Progress: any;
+   export const Tabs: any;
+   export const Steps: any;
+   export const Collapse: any;
+   export const Drawer: any;
+   export const Dropdown: any;
+   export const Menu: any;
+   export const Pagination: any;
+   export const Result: any;
+   export const Skeleton: any;
+   export const Tooltip: any;
+   export const Transfer: any;
+   export const Tree: any;
+   export const TreeSelect: any;
+   export const Cascader: any;
+   export const AutoComplete: any;
+   export const Breadcrumb: any;
+   export const Layout: any;
+   export const Affix: any;
+   export const Anchor: any;
+   export const BackTop: any;
 }
 
 declare module "@ant-design/icons" {
