@@ -46,3 +46,4 @@ export const LegendControls: React.FC<LegendControlsProps> = ({ legendState }) =
       </div>
    );
 };
+

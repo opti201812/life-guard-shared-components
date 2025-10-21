@@ -143,3 +143,4 @@ export class ChartConfigManager {
 
 // 导出单例实例
 export const chartConfigManager = ChartConfigManager.getInstance();
+

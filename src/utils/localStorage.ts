@@ -35,3 +35,4 @@ export const getLegendSelected = (): Record<string, boolean> => {
       return {};
    }
 };
+

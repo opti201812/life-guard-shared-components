@@ -58,3 +58,4 @@ const PlethWaveChart: React.FC<PlethWaveChartProps> = ({ data, title }) => {
 };
 
 export default PlethWaveChart;
+

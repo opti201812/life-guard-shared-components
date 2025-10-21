@@ -72,3 +72,4 @@ export const legendGroupsDefault = {
       items: ["睡眠质量", "压力情绪", "疲劳耐受"],
    },
 };
+

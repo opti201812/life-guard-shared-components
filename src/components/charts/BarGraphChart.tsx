@@ -63,3 +63,4 @@ const BarGraphChart: React.FC<BarGraphChartProps> = ({ data, title }) => {
 };
 
 export default BarGraphChart;
+

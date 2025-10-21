@@ -238,3 +238,4 @@ const DeviceControlPanel: React.FC<DeviceControlPanelProps> = ({
 };
 
 export default DeviceControlPanel;
+

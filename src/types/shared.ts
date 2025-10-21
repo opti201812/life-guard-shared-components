@@ -309,3 +309,4 @@ export interface SessionData {
    type: "radar" | "bracelet" | "oximeter";
    data: RadarData | BraceletData | OximeterData;
 }
+
