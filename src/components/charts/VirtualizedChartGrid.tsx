@@ -195,4 +195,3 @@ const VirtualizedChartGrid: React.FC<VirtualizedChartGridProps> = ({
 };
 
 export default VirtualizedChartGrid;
-export type { VirtualizedChartGridProps, ChartConfig };

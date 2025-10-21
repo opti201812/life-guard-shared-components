@@ -121,4 +121,3 @@ const LazyChart: React.FC<LazyChartProps> = ({
 };
 
 export default LazyChart;
-export type { LazyChartProps };

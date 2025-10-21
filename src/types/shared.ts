@@ -254,10 +254,25 @@ export interface ChartDataPoint {
    spo2?: number; // 血氧仪血氧饱和度
    oximeterHeartRate?: number; // 血氧仪心率
    signalQuality?: number; // 血氧仪信号质量
+   
+   // Additional fields for multi-chart scenarios
+   temperature?: number; // 体温
+   bloodPressure?: number; // 血压
+   pulse?: number; // 脉搏
+   oxygen?: number; // 氧饱和度
+   respiration?: number; // 呼吸
+   ecg?: number; // 心电图
+   emg?: number; // 肌电图
+   eeg?: number; // 脑电图
+   gsr?: number; // 皮肤电导
+   motion?: number; // 运动
+   stress?: number; // 压力
+   sleep?: number; // 睡眠
+   activity?: number; // 活动
 }
 
 // 图表序列配置
-export type SeriesDisplayMode = "series-and-realtime" | "realtime-only" | "none";
+export type SeriesDisplayMode = "series-and-realtime" | "realtime-only" | "series-only" | "none";
 
 export interface VisualPiece {
    gt?: number;

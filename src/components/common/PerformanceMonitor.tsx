@@ -42,7 +42,7 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
    const frameCount = useRef(0);
    const lastTime = useRef(performance.now());
-   const animationId = useRef<number>();
+   const animationId = useRef<number | undefined>(undefined);
 
    // 监控性能指标
    const updateMetrics = () => {
@@ -194,4 +194,3 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 };
 
 export default PerformanceMonitor;
-export type { PerformanceMonitorProps, PerformanceMetrics };

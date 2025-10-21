@@ -299,7 +299,7 @@ const MultiChart: React.FC<MultiChartProps & { performanceConfig: PerformanceCon
     <div style={{ height, width, ...style }} className={className}>
       <HighPerformanceChart
         baseOption={chartOption}
-        data={decimatedData.seriesData[seriesConfig.key] || []}
+        data={data}
         seriesConfigs={[seriesConfig]}
         onLegendSelectChanged={() => {}}
         maxDataPoints={performanceConfig.maxDataPoints}
@@ -348,6 +348,7 @@ const LazyChart: React.FC<LazyChartProps & { performanceConfig: PerformanceConfi
     <div ref={ref} style={{ height, width, ...style }} className={className}>
       {isVisible ? (
         <MultiChart
+          mode="multi"
           data={data}
           seriesConfig={seriesConfig}
           height={height}
@@ -407,6 +408,7 @@ const VirtualChart: React.FC<VirtualChartProps & { performanceConfig: Performanc
 
   return (
     <MultiChart
+      mode="multi"
       data={data}
       seriesConfig={seriesConfig}
       height={height}
