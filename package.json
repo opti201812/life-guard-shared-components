@@ -1,0 +1,50 @@
+{
+    "name": "@life-guard/shared-components",
+    "version": "1.0.0",
+    "description": "Shared components for LifeGuard projects",
+    "main": "src/index.ts",
+    "types": "src/index.ts",
+    "scripts": {
+        "build": "tsc",
+        "dev": "tsc --watch",
+        "lint": "eslint src --ext .ts,.tsx",
+        "lint:fix": "eslint src --ext .ts,.tsx --fix"
+    },
+    "keywords": [
+        "react",
+        "typescript",
+        "charts",
+        "life-guard",
+        "shared-components"
+    ],
+    "author": "LifeGuard Team",
+    "license": "ISC",
+    "peerDependencies": {
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0",
+        "antd": "^5.0.0",
+        "echarts": "^5.0.0",
+        "echarts-for-react": "^3.0.0",
+        "dayjs": "^1.0.0"
+    },
+    "devDependencies": {
+        "@types/react": "^18.0.0",
+        "@types/react-dom": "^18.0.0",
+        "typescript": "^5.0.0",
+        "eslint": "^8.0.0",
+        "@typescript-eslint/eslint-plugin": "^6.0.0",
+        "@typescript-eslint/parser": "^6.0.0"
+    },
+    "files": [
+        "src/**/*",
+        "README.md"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/your-org/life-guard-shared-components.git"
+    },
+    "bugs": {
+        "url": "https://github.com/your-org/life-guard-shared-components/issues"
+    },
+    "homepage": "https://github.com/your-org/life-guard-shared-components#readme"
+}
