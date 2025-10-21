@@ -54,6 +54,7 @@ declare module "antd" {
 }
 
 declare module "@ant-design/icons" {
+   // 导出所有常用的 ant-design 图标
    export const ReloadOutlined: any;
    export const SettingOutlined: any;
    export const DownloadOutlined: any;
@@ -68,11 +69,36 @@ declare module "@ant-design/icons" {
    export const ClearOutlined: any;
    export const PlayCircleOutlined: any;
    export const PauseCircleOutlined: any;
-   export const DownloadOutlined: any;
-   export const SettingOutlined: any;
    export const VideoCameraOutlined: any;
    export const StopOutlined: any;
    export const WifiOutlined: any;
+   export const LoadingOutlined: any;
+   export const CheckCircleOutlined: any;
+   export const CloseCircleOutlined: any;
+   export const ExclamationCircleOutlined: any;
+   export const InfoCircleOutlined: any;
+   export const PlusOutlined: any;
+   export const MinusOutlined: any;
+   export const EditOutlined: any;
+   export const SaveOutlined: any;
+   export const SearchOutlined: any;
+   export const FilterOutlined: any;
+   export const UpOutlined: any;
+   export const DownOutlined: any;
+   export const LeftOutlined: any;
+   export const RightOutlined: any;
+   export const CaretUpOutlined: any;
+   export const CaretDownOutlined: any;
+   export const EyeOutlined: any;
+   export const EyeInvisibleOutlined: any;
+   export const LockOutlined: any;
+   export const UnlockOutlined: any;
+   export const UserOutlined: any;
+   export const TeamOutlined: any;
+   export const HomeOutlined: any;
+   export const AppstoreOutlined: any;
+   export const MenuOutlined: any;
+   export const MoreOutlined: any;
 }
 
 declare module "echarts-for-react" {
