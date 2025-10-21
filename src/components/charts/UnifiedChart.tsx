@@ -42,6 +42,7 @@ interface SingleChartProps extends BaseChartProps {
   chartConfigManager?: any;
   incrementalData?: IncrementalData[];
   onDataAppended?: (dataCount: number) => void;
+  performance?: Partial<PerformanceConfig>;
 }
 
 // 多图表模式属性
@@ -148,6 +149,7 @@ const SingleChart: React.FC<SingleChartProps & { performanceConfig: PerformanceC
   chartConfigManager,
   incrementalData = [],
   onDataAppended,
+  performance,
   performanceConfig,
 }) => {
   const [internalData, setInternalData] = useState<ChartDataPoint[]>(data);
@@ -159,13 +161,18 @@ const SingleChart: React.FC<SingleChartProps & { performanceConfig: PerformanceC
     [seriesConfig, chartConfigManager]
   );
 
+  // 合并性能配置
+  const effectivePerformanceConfig = useMemo(() => {
+    return { ...performanceConfig, ...performance };
+  }, [performanceConfig, performance]);
+
   // 使用 hooks
   const legendState = useLegendState(effectiveSeriesConfigs);
   const incrementalAppender = useIncrementalAppender(effectiveSeriesConfigs, {
-    enableIncrementalUpdate: performanceConfig.enableIncrementalUpdate,
+    enableIncrementalUpdate: effectivePerformanceConfig.enableIncrementalUpdate,
     highFrequencyMode: true,
     onDataAppended,
-    maxBatchSize: maxDataPoints || performanceConfig.maxDataPoints,
+    maxBatchSize: maxDataPoints || effectivePerformanceConfig.maxDataPoints,
   });
 
   const decimatedSeriesData = useDecimatedSeries(
@@ -173,7 +180,7 @@ const SingleChart: React.FC<SingleChartProps & { performanceConfig: PerformanceC
     effectiveSeriesConfigs,
     timeRange,
     {
-      maxPoints: maxDataPoints || performanceConfig.maxDataPoints,
+      maxPoints: maxDataPoints || effectivePerformanceConfig.maxDataPoints,
       enableDecimation: true,
     }
   );
@@ -195,10 +202,10 @@ const SingleChart: React.FC<SingleChartProps & { performanceConfig: PerformanceC
       seriesConfigs: effectiveSeriesConfigs,
       legendVisible: legendState.legendVisible,
       timeRange,
-      enableIncrementalUpdate: performanceConfig.enableIncrementalUpdate,
+      enableIncrementalUpdate: effectivePerformanceConfig.enableIncrementalUpdate,
       highFrequencyMode: true,
     });
-  }, [effectiveSeriesConfigs, legendState.legendVisible, timeRange, performanceConfig]);
+  }, [effectiveSeriesConfigs, legendState.legendVisible, timeRange, effectivePerformanceConfig]);
 
   // 事件处理
   const handleLegendSelectChanged = (e: any) => {
@@ -229,8 +236,8 @@ const SingleChart: React.FC<SingleChartProps & { performanceConfig: PerformanceC
         data={internalData}
         seriesConfigs={effectiveSeriesConfigs}
         onLegendSelectChanged={handleLegendSelectChanged}
-        maxDataPoints={maxDataPoints || performanceConfig.maxDataPoints}
-        enableLazyUpdate={performanceConfig.enableLazyUpdate}
+        maxDataPoints={maxDataPoints || effectivePerformanceConfig.maxDataPoints}
+        enableLazyUpdate={effectivePerformanceConfig.enableLazyUpdate}
       />
 
       {/* 时间范围选择按钮 */}
