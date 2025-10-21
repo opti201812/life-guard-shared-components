@@ -396,4 +396,3 @@ export const indexedDBManager = new IndexedDBManager();
 
 // 导出类型供外部使用
 export type { RecordingSession, SessionData };
-

@@ -51,10 +51,10 @@ export function useLegendState(seriesConfigs: SeriesConfig[]): LegendState {
          setLegendGroups((prev) => ({ ...prev, [groupKey]: newVisible }));
 
          // 同时更新该分组下所有图例的可见性
-         const groupItems = legendGroupsDefault[groupKey]?.items || [];
+         const groupItems = legendGroupsDefault[groupKey as keyof typeof legendGroupsDefault]?.items || [];
          setLegendVisible((prev) => {
             const updated = { ...prev };
-            groupItems.forEach((item) => {
+            groupItems.forEach((item: string) => {
                updated[item] = newVisible;
             });
             return updated;

@@ -26,7 +26,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
             <Col span={12}>
                <RangePicker
                   value={timeRange}
-                  onChange={(dates) => dates && setTimeRange(dates as [dayjs.Dayjs, dayjs.Dayjs])}
+                  onChange={(dates: any) => dates && setTimeRange(dates as [dayjs.Dayjs, dayjs.Dayjs])}
                   showTime
                   format='YYYY-MM-DD HH:mm:ss'
                   style={{ width: "100%" }}

@@ -324,7 +324,7 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
             }}
             notMerge={false} // 允许合并，保持交互状态
             lazyUpdate={enableLazyUpdate}
-            shouldSetOption={(prevOption, newOption) => {
+            shouldSetOption={(prevOption: any, newOption: any) => {
                // 完全禁用 setOption，避免意外重置图表
                return false;
             }}

@@ -27,7 +27,7 @@ export function useIncrementalAppender(
 
    const echartsRef = useRef<any>(null);
    const dataBufferRef = useRef<IncrementalData[]>([]);
-   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+   const updateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
    const batchUpdateCountRef = useRef(0);
    const isProcessingRef = useRef(false);
 
