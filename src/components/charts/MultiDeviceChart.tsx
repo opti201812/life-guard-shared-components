@@ -1,7 +1,6 @@
 import React, { useMemo, useEffect, useState } from "react";
 import { Card, Button, Space } from "antd";
 import { ChartDataPoint, SeriesConfig } from "../../types/shared";
-import { chartConfigManager } from "../../utils/chartConfigManager";
 import { useLegendState } from "../../hooks/useLegendState";
 import { useIncrementalAppender } from "../../hooks/useIncrementalAppender";
 import { useDecimatedSeries } from "../../hooks/useDecimatedSeries";
@@ -25,6 +24,7 @@ interface MultiDeviceChartProps {
    titleExtra?: React.ReactNode;
    seriesConfigs?: SeriesConfig[]; // 覆盖默认序列配置
    maxDataPoints?: number; // 最大数据点数，默认36000
+   chartConfigManager?: any; // 图表配置管理器（从主项目传入）
 }
 
 const MultiDeviceChart: React.FC<MultiDeviceChartProps> = ({
@@ -34,6 +34,7 @@ const MultiDeviceChart: React.FC<MultiDeviceChartProps> = ({
    titleExtra,
    seriesConfigs: seriesConfigsProp,
    maxDataPoints = 36000,
+   chartConfigManager,
 }) => {
    // 状态管理
    const [internalData, setInternalData] = useState<ChartDataPoint[]>(chartData);
@@ -41,8 +42,8 @@ const MultiDeviceChart: React.FC<MultiDeviceChartProps> = ({
 
    // 获取统一配置
    const effectiveSeriesConfigs = useMemo(
-      () => chartConfigManager.getSeriesConfig(seriesConfigsProp),
-      [seriesConfigsProp]
+      () => chartConfigManager?.getSeriesConfig(seriesConfigsProp) || seriesConfigsProp || [],
+      [seriesConfigsProp, chartConfigManager]
    );
 
    // 使用内部数据作为有效数据（移除节流）
