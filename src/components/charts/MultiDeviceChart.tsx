@@ -149,4 +149,3 @@ const MultiDeviceChart: React.FC<MultiDeviceChartProps> = ({
 };
 
 export default MultiDeviceChart;
-

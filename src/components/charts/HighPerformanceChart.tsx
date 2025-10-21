@@ -306,7 +306,7 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
    return (
       <div
          style={{
-            height: "92%",
+            height: "calc(100% - 60px)", // 为图例和时间选择器留出空间
             ...style,
             position: "relative",
          }}
