@@ -10,6 +10,7 @@ interface HighPerformanceChartProps {
    onLegendSelectChanged: (e: any) => void;
    maxDataPoints?: number;
    enableLazyUpdate?: boolean;
+   timeRange?: number;
    style?: React.CSSProperties;
 }
 
@@ -32,6 +33,7 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
    onLegendSelectChanged,
    maxDataPoints = 36000,
    enableLazyUpdate = true,
+   timeRange,
    style,
 }) => {
    const echartsRef = useRef<ReactECharts>(null);

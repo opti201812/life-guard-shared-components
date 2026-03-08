@@ -1,13 +1,14 @@
-import React, { useMemo, useEffect, useState, useRef, useCallback } from "react";
+import React, { useMemo, useEffect, useState, useRef } from "react";
 import { Card, Button, Space, Spin } from "antd";
 import { ChartDataPoint, SeriesConfig } from "../../types/shared";
 import { useLegendState } from "../../hooks/useLegendState";
 import { useIncrementalAppender } from "../../hooks/useIncrementalAppender";
-import { useDecimatedSeries } from "../../hooks/useDecimatedSeries";
+// import { useDecimatedSeries } from "../../hooks/useDecimatedSeries";
 import { buildOption } from "../../utils/buildOption";
 import { LegendControls } from "./LegendControls";
 import { HighPerformanceChart } from "./HighPerformanceChart";
 import { PerformanceConfigManager, PerformanceConfig, ChartMode } from "../../utils/performanceConfigManager";
+// import { useRenderDebugger } from "../../hooks/useRenderDebugger";
 
 // 增量数据接口
 export interface IncrementalData {
@@ -77,23 +78,18 @@ type UnifiedChartProps = SingleChartProps | MultiChartProps | LazyChartProps | V
  * 支持单图表模式（CSM）和多图表模式（LG-Web）
  */
 const UnifiedChart: React.FC<UnifiedChartProps> = (props) => {
-   const { data, seriesConfig, height = 300, width = "100%", style, className, mode } = props;
+   const { mode } = props;
 
    // 根据模式确定图表数量
    const chartCount = "chartCount" in props ? props.chartCount || 12 : 1;
    const chartMode: ChartMode = { mode, chartCount };
 
-   // 获取性能配置
+   const customPerformance = (props as any).performance;
+
    const performanceConfig = useMemo(() => {
       const baseConfig = PerformanceConfigManager.getConfigForMode(chartMode);
-
-      // 如果传入了自定义性能配置，则合并
-      if ("performance" in props && props.performance) {
-         return { ...baseConfig, ...props.performance };
-      }
-
-      return baseConfig;
-   }, [chartMode, props]);
+      return customPerformance ? { ...baseConfig, ...customPerformance } : baseConfig;
+   }, [chartMode.mode, chartMode.chartCount, customPerformance]);
 
    // 检查是否需要特殊处理
    const shouldUseLazyLoading =
@@ -131,13 +127,9 @@ const UnifiedChart: React.FC<UnifiedChartProps> = (props) => {
 const SingleChart: React.FC<SingleChartProps & { performanceConfig: PerformanceConfig }> = ({
    data,
    seriesConfig,
-   height,
-   width,
    style,
    className,
-   enableInteractions = true,
    enableLegend = true,
-   enableZoom = true,
    enableTimeRangeSelector = true,
    title = "设备实时曲线",
    titleExtra,
@@ -151,10 +143,9 @@ const SingleChart: React.FC<SingleChartProps & { performanceConfig: PerformanceC
    const [internalData, setInternalData] = useState<ChartDataPoint[]>(data);
    const [timeRange, setTimeRange] = useState<number>(60);
 
-   // 获取有效配置
    const effectiveSeriesConfigs = useMemo(
       () => chartConfigManager?.getSeriesConfig([seriesConfig]) || [seriesConfig],
-      [seriesConfig, chartConfigManager]
+      [seriesConfig, chartConfigManager],
    );
 
    // 合并性能配置
@@ -171,10 +162,10 @@ const SingleChart: React.FC<SingleChartProps & { performanceConfig: PerformanceC
       maxBatchSize: maxDataPoints || effectivePerformanceConfig.maxDataPoints,
    });
 
-   const decimatedSeriesData = useDecimatedSeries(internalData, effectiveSeriesConfigs, timeRange, {
-      maxPoints: maxDataPoints || effectivePerformanceConfig.maxDataPoints,
-      enableDecimation: true,
-   });
+   // const decimatedSeriesData = useDecimatedSeries(internalData, effectiveSeriesConfigs, timeRange, {
+   //    maxPoints: maxDataPoints || effectivePerformanceConfig.maxDataPoints,
+   //    enableDecimation: true,
+   // });
 
    // 处理数据更新
    useEffect(() => {
@@ -272,15 +263,15 @@ const MultiChart: React.FC<MultiChartProps & { performanceConfig: PerformanceCon
    performanceConfig,
 }) => {
    // 数据抽稀
-   const decimatedData = useDecimatedSeries(
-      data,
-      [seriesConfig],
-      60, // 固定时间范围
-      {
-         maxPoints: performanceConfig.maxDataPoints,
-         enableDecimation: true,
-      }
-   );
+   // const decimatedData = useDecimatedSeries(
+   //    data,
+   //    [seriesConfig],
+   //    60, // 固定时间范围
+   //    {
+   //       maxPoints: performanceConfig.maxDataPoints,
+   //       enableDecimation: true,
+   //    },
+   // );
 
    // 构建简化的图表配置
    const chartOption = useMemo(() => {
@@ -332,7 +323,7 @@ const LazyChart: React.FC<LazyChartProps & { performanceConfig: PerformanceConfi
          {
             threshold: intersectionThreshold,
             rootMargin,
-         }
+         },
       );
 
       if (ref.current) {
