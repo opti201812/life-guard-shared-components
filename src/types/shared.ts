@@ -185,6 +185,14 @@ export interface RealtimeStats {
    sleepQuality?: number; // 睡眠质量指标
    stressEmotion?: number; // 压力情绪
    fatigueTolerance?: number; // 疲劳耐受指标
+
+   // 环境数据
+   environmentTemperature?: number; // 环境温度（摄氏度）
+   environmentHumidity?: number; // 环境湿度（%）
+   environmentInterference?: number; // 环境干扰（db）
+   emergencyAlarmStatusCalled?: boolean; // 报警状态
+   breathInterruptAlarm?: number; // 呼吸中断报警
+   buttonStatus?: number; // 手环报警状态
 }
 
 export interface ChartDataPoint {
@@ -250,11 +258,16 @@ export interface ChartDataPoint {
    diastolicPressure?: number; // 舒张压
    bloodOxygen?: number; // 手环血氧
    bodyTemperature?: number; // 体温
+
+   // 新增字段
+   breathInterruptAlarm?: number; // 呼吸中断报警
+   buttonStatus?: number; // 手环报警状态
+
    // Oximeter fields
    spo2?: number; // 血氧仪血氧饱和度
    oximeterHeartRate?: number; // 血氧仪心率
    signalQuality?: number; // 血氧仪信号质量
-   
+
    // Additional fields for multi-chart scenarios
    temperature?: number; // 体温
    bloodPressure?: number; // 血压
@@ -324,4 +337,3 @@ export interface SessionData {
    type: "radar" | "bracelet" | "oximeter";
    data: RadarData | BraceletData | OximeterData;
 }
-
