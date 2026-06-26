@@ -49,10 +49,13 @@ interface SingleChartProps extends BaseChartProps {
 // 多图表模式属性
 interface MultiChartProps extends BaseChartProps {
    mode: "multi";
+   // 🔥 支持多个系列配置（向后兼容：如果只传 seriesConfig，则使用单个系列）
+   seriesConfigs?: SeriesConfig[]; // 多个系列配置
    // 多图表特有属性
    enableLazyLoading?: boolean;
    enableVirtualization?: boolean;
    chartCount?: number;
+   hideLegend?: boolean; // 隐藏图例（用于嵌入式场景）
    performance?: Partial<PerformanceConfig>;
 }
 
@@ -71,7 +74,9 @@ interface VirtualChartProps extends MultiChartProps {
 }
 
 // 联合类型
-type UnifiedChartProps = SingleChartProps | MultiChartProps | LazyChartProps | VirtualChartProps;
+type UnifiedChartProps = (SingleChartProps | MultiChartProps | LazyChartProps | VirtualChartProps) & {
+   onChartReady?: (chartInstance: any) => void;
+};
 
 /**
  * 统一图表组件
@@ -118,7 +123,14 @@ const UnifiedChart: React.FC<UnifiedChartProps> = (props) => {
    }
 
    // 多图表模式
-   return <MultiChart {...(props as MultiChartProps)} performanceConfig={performanceConfig} />;
+   return (
+      <MultiChart
+         {...(props as MultiChartProps)}
+         seriesConfigs={seriesConfigs}
+         performanceConfig={performanceConfig}
+         onChartReady={onChartReady}
+      />
+   );
 };
 
 /**
@@ -252,47 +264,65 @@ const SingleChart: React.FC<SingleChartProps & { performanceConfig: PerformanceC
 
 /**
  * 多图表模式组件（LG-Web 场景）
+ * 🔥 支持多个系列配置
  */
-const MultiChart: React.FC<MultiChartProps & { performanceConfig: PerformanceConfig }> = ({
+const MultiChart: React.FC<
+   MultiChartProps & { performanceConfig: PerformanceConfig; onChartReady?: (chartInstance: any) => void }
+> = ({
    data,
    seriesConfig,
+   seriesConfigs, // 🔥 支持多个系列配置
    height,
    width,
    style,
    className,
+   hideLegend = false,
    performanceConfig,
+   onChartReady,
 }) => {
-   // 数据抽稀
-   // const decimatedData = useDecimatedSeries(
-   //    data,
-   //    [seriesConfig],
-   //    60, // 固定时间范围
-   //    {
-   //       maxPoints: performanceConfig.maxDataPoints,
-   //       enableDecimation: true,
-   //    },
-   // );
+   // 🔥 确定要使用的系列配置：优先使用 seriesConfigs，否则使用单个 seriesConfig
+   const effectiveSeriesConfigs = useMemo(() => {
+      if (seriesConfigs && seriesConfigs.length > 0) {
+         return seriesConfigs;
+      }
+      return seriesConfig ? [seriesConfig] : [];
+   }, [seriesConfigs, seriesConfig]);
 
    // 构建简化的图表配置
+   // 多系列小图表：强制隐藏内置图例
+   const forceHideLegend = true;
+
+   // 🔥 构建图例可见性映射（所有系列都可见）
+   const legendVisibleMap = useMemo(() => {
+      const map: Record<string, boolean> = {};
+      effectiveSeriesConfigs.forEach((config) => {
+         map[config.name] = true;
+      });
+      return map;
+   }, [effectiveSeriesConfigs]);
+
    const chartOption = useMemo(() => {
       return buildOption({
-         seriesConfigs: [seriesConfig],
-         legendVisible: { [seriesConfig.name]: true },
+         seriesConfigs: effectiveSeriesConfigs,
+         legendVisible: legendVisibleMap,
          timeRange: 60,
          enableIncrementalUpdate: false,
          highFrequencyMode: false,
+         hideLegend: hideLegend || forceHideLegend,
       });
-   }, [seriesConfig]);
+   }, [effectiveSeriesConfigs, legendVisibleMap, hideLegend]);
 
    return (
-      <div style={{ height, width, ...style }} className={className}>
+      <div style={{ height: height || "100%", width: width || "100%", ...style }} className={className}>
          <HighPerformanceChart
             baseOption={chartOption}
-            data={data}
-            seriesConfigs={[seriesConfig]}
+            data={data} // 使用原始数据（多系列）
+            seriesConfigs={effectiveSeriesConfigs} // 🔥 传递多个系列配置
             onLegendSelectChanged={() => {}}
             maxDataPoints={performanceConfig.maxDataPoints}
             enableLazyUpdate={false}
+            hideLegend={hideLegend || forceHideLegend}
+            onChartReady={onChartReady}
          />
       </div>
    );
@@ -308,6 +338,7 @@ const LazyChart: React.FC<LazyChartProps & { performanceConfig: PerformanceConfi
    width,
    style,
    className,
+   hideLegend,
    intersectionThreshold = 0.1,
    rootMargin = "50px",
    performanceConfig,
@@ -334,20 +365,19 @@ const LazyChart: React.FC<LazyChartProps & { performanceConfig: PerformanceConfi
    }, [intersectionThreshold, rootMargin]);
 
    return (
-      <div ref={ref} style={{ height, width, ...style }} className={className}>
+      <div ref={ref} style={{ height: height || "100%", width: width || "100%", ...style }} className={className}>
          {isVisible ? (
             <MultiChart
                mode='multi'
                data={data}
                seriesConfig={seriesConfig}
-               height={height}
-               width={width}
                performanceConfig={performanceConfig}
+               hideLegend={hideLegend}
             />
          ) : (
             <div
                style={{
-                  height,
+                  height: height || "100%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -373,14 +403,15 @@ const VirtualChart: React.FC<VirtualChartProps & { performanceConfig: Performanc
    style,
    className,
    isVisible = true,
+   hideLegend,
    performanceConfig,
 }) => {
    if (!isVisible) {
       return (
          <div
             style={{
-               height,
-               width,
+               height: height || "100%",
+               width: width || "100%",
                display: "flex",
                alignItems: "center",
                justifyContent: "center",
@@ -400,10 +431,9 @@ const VirtualChart: React.FC<VirtualChartProps & { performanceConfig: Performanc
          mode='multi'
          data={data}
          seriesConfig={seriesConfig}
-         height={height}
-         width={width}
          style={style}
          className={className}
+         hideLegend={hideLegend}
          performanceConfig={performanceConfig}
       />
    );

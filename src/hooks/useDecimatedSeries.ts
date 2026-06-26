@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { ChartDataPoint, SeriesConfig } from "../types/shared";
+import { applyDecimation, DecimationStrategy } from "../utils/decimation";
 
 export interface DecimatedSeriesData {
    // 按序列 key 返回的抽稀后数据
@@ -21,9 +22,10 @@ export function useDecimatedSeries(
    options: {
       maxPoints?: number;
       enableDecimation?: boolean;
+      strategy?: DecimationStrategy;
    } = {}
 ): DecimatedSeriesData {
-   const { maxPoints = 2000, enableDecimation = true } = options;
+   const { maxPoints = 2000, enableDecimation = true, strategy = 'LTTB' } = options;
 
    const result = useMemo(() => {
       const seriesData: Record<string, [number, number][]> = {};
@@ -45,10 +47,12 @@ export function useDecimatedSeries(
 
          originalCounts[config.key] = rawData.length;
 
-         // 简化版抽稀：如果数据点超过最大值，进行均匀采样
+         // 应用抽稀策略
          if (enableDecimation && rawData.length > maxPoints) {
-            const step = Math.ceil(rawData.length / maxPoints);
-            rawData = rawData.filter((_, index) => index % step === 0);
+            rawData = applyDecimation(rawData, {
+               maxPoints,
+               strategy,
+            });
          }
 
          decimatedCounts[config.key] = rawData.length;
@@ -60,7 +64,7 @@ export function useDecimatedSeries(
          originalCounts,
          decimatedCounts,
       };
-   }, [chartData, seriesConfigs, timeRange, maxPoints, enableDecimation]);
+   }, [chartData, seriesConfigs, timeRange, maxPoints, enableDecimation, strategy]);
 
    return result;
 }

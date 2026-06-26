@@ -6,13 +6,14 @@ export interface BuildOptionParams {
    timeRange: number;
    enableIncrementalUpdate?: boolean;
    highFrequencyMode?: boolean;
+   hideLegend?: boolean; // 隐藏图例
 }
 
 /**
  * 纯函数：根据输入参数构建 ECharts 配置
  */
 export function buildOption(params: BuildOptionParams): any {
-   const { seriesConfigs, legendVisible, timeRange } = params;
+   const { seriesConfigs, legendVisible, timeRange, hideLegend = false } = params;
 
    // 构建 nameToConfig 映射
    const nameToConfig = seriesConfigs.reduce((acc, s) => {
@@ -169,14 +170,14 @@ export function buildOption(params: BuildOptionParams): any {
          },
       },
       legend: {
-         show: true,
+         show: !hideLegend, // 根据hideLegend参数控制图例显示
          selected: legendVisible,
       },
       grid: {
          left: "8%",
          right: "8%",
          top: "10%",
-         bottom: 50,
+         bottom: 10, // 减少底部边距，适配嵌入式场景
          containLabel: true,
       },
       xAxis: {

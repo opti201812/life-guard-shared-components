@@ -11,7 +11,9 @@ interface HighPerformanceChartProps {
    maxDataPoints?: number;
    enableLazyUpdate?: boolean;
    timeRange?: number;
+   hideLegend?: boolean; // 隐藏图例（用于嵌入式场景）
    style?: React.CSSProperties;
+   onChartReady?: (chartInstance: any) => void; // 图表初始化完成回调
 }
 
 interface SeriesAppendInfo {
@@ -34,7 +36,9 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
    maxDataPoints = 36000,
    enableLazyUpdate = true,
    timeRange,
+   hideLegend = false,
    style,
+   onChartReady,
 }) => {
    const echartsRef = useRef<ReactECharts>(null);
    const lastDataLengthRef = useRef<number>(0);
@@ -65,6 +69,17 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
 
       return infoMap;
    }, [seriesConfigs, baseOption.series]);
+
+   // 基于 baseOption.legend 判断是否显示图例
+   const hasLegend = useMemo(() => {
+      // 如果明确指定hideLegend，则强制返回false
+      if (hideLegend) return false;
+
+      const legend: any = (baseOption as any)?.legend;
+      if (!legend) return false;
+      const legends = Array.isArray(legend) ? legend : [legend];
+      return legends.some((l: any) => l?.show !== false && (Array.isArray(l?.data) ? l.data.length > 0 : true));
+   }, [baseOption, hideLegend]);
 
    // 转换数据点为ECharts格式
    const convertDataForECharts = useCallback(
@@ -108,19 +123,30 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
       (newDataPoints: ChartDataPoint[], isProcessingPending: boolean = false) => {
          // 获取图表实例；未就绪则缓存数据并退出
          const chartInstance = echartsRef.current?.getEchartsInstance();
-         if (!chartInstance || newDataPoints.length === 0) {
+         if (!chartInstance) {
             pendingDataRef.current.push(...newDataPoints);
             return;
          }
 
+         if (newDataPoints.length === 0) {
+            return;
+         }
+
          // 检查图表是否已初始化且appendData方法存在
-         if (!initializedRef.current || typeof chartInstance.appendData !== "function") {
+         if (!initializedRef.current) {
+            pendingDataRef.current.push(...newDataPoints);
+            return;
+         }
+
+         if (typeof chartInstance.appendData !== "function") {
             pendingDataRef.current.push(...newDataPoints);
             return;
          }
 
          // 直接追加数据到图表
          const newSeriesData = convertDataForECharts(newDataPoints);
+         let successCount = 0;
+         let failCount = 0;
 
          // 为每个系列追加数据
          seriesInfoMap.forEach((info, index) => {
@@ -137,9 +163,7 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
                      !option.series[info.seriesIndex] ||
                      typeof option.series[info.seriesIndex] !== "object"
                   ) {
-                     console.warn(
-                        `[HighPerformanceChart] 系列 ${info.seriesName} (索引 ${info.seriesIndex}) 不存在或无效，跳过追加数据`
-                     );
+                     failCount++;
                      return;
                   }
 
@@ -147,8 +171,9 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
                      seriesIndex: info.seriesIndex,
                      data: newData,
                   });
+                  successCount++;
                } catch (error) {
-                  console.error(`[HighPerformanceChart] 系列 ${info.seriesName} appendData 调用失败:`, error);
+                  failCount++;
                   pendingDataRef.current.push(...newDataPoints);
                }
             }
@@ -158,7 +183,7 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
          try {
             chartInstance.resize();
          } catch (error) {
-            console.error("[HighPerformanceChart] resize 调用失败:", error);
+            // 静默处理resize错误
          }
       },
       [seriesInfoMap, convertDataForECharts]
@@ -201,16 +226,139 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
       try {
          chartInstance.resize();
       } catch (error) {
-         console.error("[HighPerformanceChart] 初始化resize失败:", error);
+         // 静默处理resize错误
       }
 
       initializedRef.current = true;
    }, [baseOption]);
 
+   // 图表初始化完成回调
+   useEffect(() => {
+      if (onChartReady) {
+         const timer = setTimeout(() => {
+            if (initializedRef.current) {
+               try {
+                  onChartReady({
+                     appendData: (newDataPoints: ChartDataPoint[]) => {
+                        // 提供 appendData 方法供外部调用
+                        if (!initializedRef.current) {
+                           return;
+                        }
+
+                        if (newDataPoints.length === 0) {
+                           return;
+                        }
+
+                        const chartInstance = echartsRef.current?.getEchartsInstance();
+                        if (!chartInstance) {
+                           return;
+                        }
+
+                        try {
+                           // 直接追加新数据，不需要与现有数据合并（因为已经通过时间戳去重）
+                           appendNewData(newDataPoints);
+                           lastDataLengthRef.current += newDataPoints.length;
+                        } catch (error) {
+                           // 静默处理错误
+                        }
+                     },
+                  });
+               } catch (error) {
+                  // 静默处理错误
+               }
+            }
+         }, 200); // 等待图表完全初始化
+
+         return () => clearTimeout(timer);
+      }
+   }, [onChartReady, getNewDataPoints, appendNewData, data]);
+
+   // 🔥 修复：初始化完成后，处理初始数据
+   useEffect(() => {
+      // 使用 setTimeout 确保在初始化完成后执行
+      const timer = setTimeout(() => {
+         if (!initializedRef.current || !data || data.length === 0) {
+            return;
+         }
+
+         // 如果已经有数据但还没有设置到图表中，直接设置
+         if (lastDataLengthRef.current === 0 && data.length > 0) {
+            const chartInstance = echartsRef.current?.getEchartsInstance();
+            if (chartInstance) {
+               const seriesData = convertDataForECharts(data);
+               const series = Array.isArray(baseOption.series) ? baseOption.series : [baseOption.series];
+               const updatedSeries = series.map((s: any, index: number) => {
+                  const info = seriesInfoMap.find((info) => info.seriesIndex === index);
+                  if (info) {
+                     const dataIndex = seriesInfoMap.indexOf(info);
+                     if (dataIndex >= 0 && seriesData[dataIndex] && seriesData[dataIndex].length > 0) {
+                        return {
+                           ...s,
+                           data: seriesData[dataIndex],
+                        };
+                     }
+                  }
+                  return s;
+               });
+               chartInstance.setOption({ series: updatedSeries }, false);
+               lastDataLengthRef.current = data.length;
+            }
+         }
+      }, 100); // 延迟100ms确保初始化完成
+
+      return () => clearTimeout(timer);
+   }, [data, baseOption, seriesInfoMap, convertDataForECharts]);
+
    // 初始化图表 - 只在组件挂载时执行一次
    useEffect(() => {
       initializeChart();
    }, [initializeChart]);
+
+   // 🔥 组件内维护时间窗口（1小时）
+   const cleanupExpiredData = useCallback(() => {
+      if (!initializedRef.current) return;
+
+      const chartInstance = echartsRef.current?.getEchartsInstance();
+      if (!chartInstance) return;
+
+      const now = Date.now();
+      const cutoffTime = now - 3600000; // 1小时前
+
+      // 获取当前图表数据
+      const option = chartInstance.getOption();
+      if (!option || !option.series) return;
+
+      const seriesArray = Array.isArray(option.series) ? option.series : [option.series];
+
+      // 清理每个系列的过期数据
+      const updatedSeries: any[] = [];
+      let hasChanges = false;
+
+      seriesArray.forEach((series, index) => {
+         if (series && series.data && Array.isArray(series.data)) {
+            const filteredData = series.data.filter((point: any) => {
+               return point && point[0] >= cutoffTime; // point[0] 是时间戳
+            });
+
+            if (filteredData.length !== series.data.length) {
+               hasChanges = true;
+               updatedSeries.push({
+                  seriesIndex: index,
+                  data: filteredData,
+               });
+            }
+         }
+      });
+
+      // 批量更新过期数据清理
+      if (hasChanges && updatedSeries.length > 0) {
+         try {
+            chartInstance.setOption({ series: updatedSeries }, false);
+         } catch (error) {
+            // 静默处理错误
+         }
+      }
+   }, []);
 
    // 处理数据更新 - 只处理数据变化
    useEffect(() => {
@@ -222,6 +370,9 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
       if (newDataPoints.length > 0) {
          appendNewData(newDataPoints);
          lastDataLengthRef.current = data.length;
+
+         // 每次添加新数据后，清理过期数据
+         cleanupExpiredData();
       } else if (data.length === 0) {
          // 数据被清除时，清空图表数据
          const chartInstance = echartsRef.current?.getEchartsInstance();
@@ -241,13 +392,13 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
                      false
                   );
                } catch (error) {
-                  console.error(`[HighPerformanceChart] 清空系列 ${info.seriesName} 数据失败:`, error);
+                  // 静默处理错误
                }
             });
          }
          lastDataLengthRef.current = 0;
       }
-   }, [data, getNewDataPoints, appendNewData, seriesInfoMap]);
+   }, [data, getNewDataPoints, appendNewData, seriesInfoMap, cleanupExpiredData]);
 
    // 处理配置变化（需要重新初始化）
    useEffect(() => {
@@ -258,6 +409,17 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
          initializeChart();
       }
    }, [seriesConfigs, initializeChart]);
+
+   // 🔥 定时清理过期数据（每分钟执行一次）
+   useEffect(() => {
+      if (!initializedRef.current) return;
+
+      const cleanupInterval = setInterval(() => {
+         cleanupExpiredData();
+      }, 60000); // 每分钟清理一次
+
+      return () => clearInterval(cleanupInterval);
+   }, [cleanupExpiredData]);
 
    // 定时更新x轴范围，保持"1小时前到当前时间"
    useEffect(() => {
@@ -308,7 +470,7 @@ export const HighPerformanceChart: React.FC<HighPerformanceChartProps> = ({
    return (
       <div
          style={{
-            height: "calc(100% - 60px)", // 为图例和时间选择器留出空间
+            height: hideLegend ? "100%" : "calc(100% - 60px)", // 隐藏图例时占满；否则为图例和时间选择器留出空间
             ...style,
             position: "relative",
          }}

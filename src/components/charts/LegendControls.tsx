@@ -36,7 +36,7 @@ export const LegendControls: React.FC<LegendControlsProps> = ({ legendState }) =
                   {groupKey === "basicVitals"
                      ? "基础体征"
                      : groupKey === "vitalAnalysis"
-                     ? "体征分析"
+                     ? "心率分析"
                      : groupKey === "sleepMonitoring"
                      ? "睡眠监测"
                      : groupKey}
