@@ -3,7 +3,7 @@ import { Card, Button, Space, Spin } from "antd";
 import { ChartDataPoint, SeriesConfig } from "../../types/shared";
 import { useLegendState } from "../../hooks/useLegendState";
 import { useIncrementalAppender } from "../../hooks/useIncrementalAppender";
-// import { useDecimatedSeries } from "../../hooks/useDecimatedSeries";
+import { useDecimatedSeries } from "../../hooks/useDecimatedSeries";
 import { buildOption } from "../../utils/buildOption";
 import { LegendControls } from "./LegendControls";
 import { HighPerformanceChart } from "./HighPerformanceChart";
@@ -83,7 +83,9 @@ type UnifiedChartProps = (SingleChartProps | MultiChartProps | LazyChartProps | 
  * 支持单图表模式（CSM）和多图表模式（LG-Web）
  */
 const UnifiedChart: React.FC<UnifiedChartProps> = (props) => {
-   const { mode } = props;
+   const { mode, onChartReady } = props;
+   // 🔥 提取 seriesConfigs（如果存在）
+   const seriesConfigs = "seriesConfigs" in props ? props.seriesConfigs : undefined;
 
    // 根据模式确定图表数量
    const chartCount = "chartCount" in props ? props.chartCount || 12 : 1;
@@ -288,6 +290,55 @@ const MultiChart: React.FC<
       return seriesConfig ? [seriesConfig] : [];
    }, [seriesConfigs, seriesConfig]);
 
+   // 🔥 数据抽稀：使用 LTTB 算法，支持多个系列
+   const decimatedData = useDecimatedSeries(
+      data,
+      effectiveSeriesConfigs,
+      60, // 固定时间范围
+      {
+         maxPoints: performanceConfig.maxDataPoints,
+         enableDecimation: true,
+         strategy: "LTTB", // 使用 LTTB 算法
+      }
+   );
+
+   // 🔥 将抽稀后的数据转换回 ChartDataPoint[] 格式（支持多个系列）
+   const decimatedChartData = useMemo(() => {
+      // 收集所有系列的数据点
+      const allDecimatedPoints: Map<number, ChartDataPoint> = new Map();
+
+      effectiveSeriesConfigs.forEach((config) => {
+         const seriesKey = config.key;
+         const decimatedPoints = decimatedData.seriesData[seriesKey] || [];
+
+         decimatedPoints.forEach(([timestamp, value]) => {
+            // 从原始数据中找到对应时间戳的数据点，保留其他字段
+            const originalPoint = data.find((p) => Math.abs(p.timestamp - timestamp) < 1000);
+
+            if (allDecimatedPoints.has(timestamp)) {
+               // 如果已存在该时间戳的点，合并数据
+               const existingPoint = allDecimatedPoints.get(timestamp)!;
+               existingPoint[seriesKey] = value;
+            } else if (originalPoint) {
+               // 使用原始点，但更新当前系列的值
+               allDecimatedPoints.set(timestamp, {
+                  ...originalPoint,
+                  [seriesKey]: value, // 使用抽稀后的值
+               });
+            } else {
+               // 创建新的数据点
+               allDecimatedPoints.set(timestamp, {
+                  timestamp,
+                  [seriesKey]: value,
+               } as ChartDataPoint);
+            }
+         });
+      });
+
+      // 转换为数组并按时间戳排序
+      return Array.from(allDecimatedPoints.values()).sort((a, b) => a.timestamp - b.timestamp);
+   }, [decimatedData.seriesData, effectiveSeriesConfigs, data]);
+
    // 构建简化的图表配置
    // 多系列小图表：强制隐藏内置图例
    const forceHideLegend = true;
@@ -316,7 +367,7 @@ const MultiChart: React.FC<
       <div style={{ height: height || "100%", width: width || "100%", ...style }} className={className}>
          <HighPerformanceChart
             baseOption={chartOption}
-            data={data} // 使用原始数据（多系列）
+            data={decimatedChartData} // ✅ 使用抽稀后的数据（包含所有系列）
             seriesConfigs={effectiveSeriesConfigs} // 🔥 传递多个系列配置
             onLegendSelectChanged={() => {}}
             maxDataPoints={performanceConfig.maxDataPoints}
